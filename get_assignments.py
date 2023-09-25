@@ -60,7 +60,7 @@ def main():
             print('No course work found.')
             return
         # Prints the names of the first 10 courses.
-        print('Course wordk:')
+        print('Course work:')
         for work in courseWork:
             print(work['title'], work['id'])
 
