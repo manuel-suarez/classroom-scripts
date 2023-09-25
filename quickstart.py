@@ -47,7 +47,7 @@ def main():
         # Prints the names of the first 10 courses.
         print('Courses:')
         for course in courses:
-            print(course['name'])
+            print(course['name'], course['id'])
 
     except HttpError as error:
         print('An error ocurred: %s' % error)
