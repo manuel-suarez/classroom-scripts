@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import os.path
+import os
 import sys
 
 from google.auth.transport.requests import Request
@@ -61,7 +61,7 @@ def main():
 
     try:
         service = build('classroom', 'v1', credentials=creds)
-        #gservice = build('drive', 'v3', credentials=creds)
+        # gservice = build('drive', 'v3', credentials=creds)
 
         # Call the Classroom API
         # Use course ID
@@ -72,12 +72,20 @@ def main():
         if not submissions:
             print('No submissions found.')
             return
-        # Prints the names of the first 10 courses.
+        # Create destination dir
+        if not os.path.exists(destination):
+            os.makedirs(destination, exist_ok=True)
+
         print('Course work submissions:')
         for submission in submissions:
             profile = (profiles.get(userId=submission['userId']).execute()).get('name', [])
             print(submission['id'], submission['userId'], profile['fullName'], submission['assignmentSubmission'])
             attachments = submission['assignmentSubmission'].get('attachments')
+            if attachments is None:
+                # Descartamos estudiante si no subió nada a su tarea
+                continue
+            # Creamos directorio del estudiante
+            os.makedirs(os.path.join(destination, profile['fulleName']), exist_ok=True)
             # Descargamos archivos
             for attachment in attachments:
                 driveFile = attachment['driveFile']
