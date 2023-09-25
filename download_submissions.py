@@ -1,18 +1,20 @@
 from __future__ import print_function
 
 import os
+import io
 import sys
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'  # Ignore change of SCOPE warnings
 SCOPES = [
-    #'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/classroom.student-submissions.students.readonly',
     'https://www.googleapis.com/auth/classroom.courses.readonly',
     'https://www.googleapis.com/auth/classroom.rosters.readonly ',
@@ -61,7 +63,7 @@ def main():
 
     try:
         service = build('classroom', 'v1', credentials=creds)
-        # gservice = build('drive', 'v3', credentials=creds)
+        gservice = build('drive', 'v3', credentials=creds)
 
         # Call the Classroom API
         # Use course ID
@@ -85,12 +87,25 @@ def main():
                 # Descartamos estudiante si no subió nada a su tarea
                 continue
             # Creamos directorio del estudiante
-            os.makedirs(os.path.join(destination, profile['fulleName']), exist_ok=True)
+            studentName = profile['fullName']
+            os.makedirs(os.path.join(destination, studentName), exist_ok=True)
             # Descargamos archivos
             for attachment in attachments:
                 driveFile = attachment['driveFile']
-                print(driveFile['id'], driveFile['title'])
+                file_id = driveFile['id']
+                file_name = driveFile['title']
+                request = gservice.files().get_media(fileId=file_id)
+                fh = io.BytesIO()
+                downloader = MediaIoBaseDownload(fh, request)
+                done = False
+                while done is False:
+                    status, done = downloader.next_chunk()
+                    print("Download %d%%." % int(status.progress() * 100))
 
+                fh.seek(0)
+                with open(os.path.join(destination, studentName, file_name), 'wb') as f:
+                    f.write(fh.read())
+                    f.close()
 
     except HttpError as error:
         print('An error ocurred: %s' % error)
