@@ -70,7 +70,7 @@ def main():
         print('Course work submissions:')
         for submission in submissions:
             profile = (profiles.get(userId=submission['userId']).execute()).get('name', [])
-            print(submission['id'], submission['userId'], profile['fullName'])
+            print(submission['id'], submission['userId'], profile['fullName'], submission['assignmentSubmission'])
 
     except HttpError as error:
         print('An error ocurred: %s' % error)
